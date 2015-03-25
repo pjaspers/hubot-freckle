@@ -1,8 +1,6 @@
 var freckle = require('freckle'),
     _ = require('lodash');
 
-
-
 module.exports = Checkle;
 
 function Checkle(token, subdomain, userIds) {
@@ -33,22 +31,54 @@ Checkle.prototype.entriesForDate = function(date, callback) {
   freckle.entries.list(args, callback);
 }
 
+Checkle.prototype.entriesForRange = function(startDate, endDate, callback) {
+  var args = {
+    'search': {
+      'people': this.userIds.join(","),
+      "from": formatDate(startDate),
+      "to": formatDate(endDate)
+    }
+  };
+  freckle.entries.list(args, callback);
+}
+
 Checkle.prototype.minutesPerUserOnDate = function(date, callback) {
+  this.minutesPerUserInRange(date, date, callback);
+}
+
+Checkle.prototype.minutesPerUserFromDate = function(date, callback) {
+  var today = new Date;
+  this.minutesPerUserInRange(date, today, callback);
+}
+
+Checkle.prototype.minutesPerUserInRange = function(startDate, endDate, callback) {
   var that = this;
   that.users(function(err, users) {
     if (err) { return callback(err, {}); }
-    return that.entriesForDate(date, function(err, entries) {
+    return that.entriesForRange(startDate, endDate, function(err, entries) {
       if (err) { return callback(err, {}); }
-      var grouped = groupByUserId(entries);
-      var data = _.reduce(that.userIds, function(result, id) {
-                   var userEntries = grouped[id.toString()] || {};
-                   var user = getUser(id, users);
-                   result[id] = {name: user.first_name, minutes: sumMinutes(userEntries)};
+      var dates = _.chain(entries).map('entry').pluck('date').uniq().value().sort();
+      var groupedByDate = groupByDate(entries);
+      var data = _.reduce(dates, function(result, date) {
+                   var entriesForDate = groupedByDate[date];
+                   result[date] = sumPerUser(that.userIds, users, entriesForDate);
                    return result;
                  }, {});
       return callback(null, data);
     });
   });
+}
+
+function sumPerUser(userIds, users, entries) {
+  var groupedByUser = groupByUserId(entries);
+  return _.map(userIds, function(id) {
+    var userEntries = groupedByUser[id.toString()] || {};
+    var user = getUser(id, users);
+    return {id: id,
+            name: user.first_name,
+            last_name: user.last_name,
+            minutes: sumMinutes(userEntries)};
+         });
 }
 
 function sumMinutes(entries) {
@@ -60,6 +90,12 @@ function sumMinutes(entries) {
     minutes = 0;
   }
   return minutes;
+}
+
+function groupByDate(entries) {
+  return _.chain(entries).groupBy(function(entry) {
+           return entry.entry.date;
+         }).value();
 }
 
 function groupByUserId(entries) {

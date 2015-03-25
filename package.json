@@ -2,7 +2,7 @@
   "name": "hubot-checkle",
   "version": "1.0.1",
   "description": "A hubot script to fetch yesterday's Freckle entries by user",
-  "main": "checkle.coffee",
+  "main": "index.coffee",
   "repository": {
     "type": "git",
     "url": "git://github.com/pjaspers/hubot-checkle.git"
