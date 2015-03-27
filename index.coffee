@@ -16,10 +16,11 @@
 
 Checkle = require './checkle'
 
-attach = (robot, color, users) ->
+attach = (robot, color, date, users) ->
   fields = for user in users
     {short: true, title: user.name, value: user.minutes}
   robot.emit 'slack.attachment',
+    text: "*Freckle for #{date}* :scream_cat:"
     content:
       color: color
       fields: fields
@@ -29,10 +30,9 @@ attach = (robot, color, users) ->
 emote = (robot, msg, data) ->
   for own date, users of data
     badusers = (user for user in users when +user.minutes < 420)
-    goodusers = (user for user in users when +user.minutes > 420)
-    msg.send "*Freckle for #{date}* :scream_cat:"
-    attach robot, "danger", badusers
-    attach robot, "good", goodusers
+    goodusers = (user for user in users when +user.minutes >= 420)
+    attach robot, "danger", date, badusers
+    attach robot, "good", date, goodusers
 
 displaySummary = (msg, data) ->
   for own date, users of data
