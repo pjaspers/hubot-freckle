@@ -16,11 +16,30 @@
 
 Checkle = require './checkle'
 
+attach = (robot, color, users) ->
+  fields = for user in users
+    {short: true, title: user.name, value: user.minutes}
+  robot.emit 'slack.attachment',
+    content:
+      color: color
+      fields: fields
+    channel: "#general" # optional, defaults to message.room
+    username: "Bob Stinkt"
+
+emote = (robot, msg, data) ->
+  for own date, users of data
+    badusers = (user for user in users when +user.minutes < 420)
+    goodusers = (user for user in users when +user.minutes > 420)
+    msg.send "*Freckle for #{date}* :scream_cat:"
+    attach robot, "danger", badusers
+    attach robot, "good", goodusers
+
 displaySummary = (msg, data) ->
   for own date, users of data
     msg.send date
     for user in users
       msg.send "  #{user.name} has #{user.minutes}"
+
 
 today = ->
   new Date()
@@ -37,9 +56,9 @@ module.exports = (robot) ->
     subdomain = process.env.FRECKLE_DOMAIN
 
     checkle = new Checkle(token, subdomain, userIds)
-    if ((new Date()).getHours < 11)
+    if ((new Date()).getHours() < 11)
       checkle.minutesPerUserOnDate yesterday(), (err, data) ->
-        displaySummary(msg, data)
+        emote(robot, msg, data)
     else
       checkle.minutesPerUserFromDate yesterday(), (err, data) ->
-        displaySummary(msg, data)
+        emote(robot, msg, data)
