@@ -25,7 +25,8 @@ attach = (robot, color, date, users) ->
       color: color
       fields: fields
     channel: "#general" # optional, defaults to message.room
-    username: "Bob Stinkt"
+    username: "Freckle for #{date}"
+    icon_url: "http://pile.pjaspers.com/freckle.png"
 
 emote = (robot, msg, data) ->
   for own date, users of data
