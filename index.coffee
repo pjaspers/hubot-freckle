@@ -47,7 +47,9 @@ today = ->
 
 yesterday = ->
   date = new Date()
-  date.setDate(date.getDate() - 1)
+  date.setDate(date.getDate() - 3) if date.getDay() == 1
+  date.setDate(date.getDate() - 2) if date.getDay() == 0
+  date.setDate(date.getDate() - 1) if date.getDay() == 6
   date
 
 module.exports = (robot) ->
