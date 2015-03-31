@@ -49,7 +49,7 @@ yesterday = ->
   date = new Date()
   date.setDate(date.getDate() - 3) if date.getDay() == 1
   date.setDate(date.getDate() - 2) if date.getDay() == 0
-  date.setDate(date.getDate() - 1) if date.getDay() == 6
+  date.setDate(date.getDate() - 1) if date.getDay() > 1
   date
 
 module.exports = (robot) ->
@@ -59,9 +59,13 @@ module.exports = (robot) ->
     subdomain = process.env.FRECKLE_DOMAIN
 
     checkle = new Checkle(token, subdomain, userIds)
-    if ((new Date()).getHours() < 11)
+    hour = new Date().getHours()
+    if hour < 11
       checkle.minutesPerUserOnDate yesterday(), (err, data) ->
         emote(robot, msg, data)
-    else
+    else if hour > 11 && hour < 18
       checkle.minutesPerUserFromDate yesterday(), (err, data) ->
+        emote(robot, msg, data)
+    else
+      checkle.minutesPerUserOnDate new Date(), (err, data) ->
         emote(robot, msg, data)
